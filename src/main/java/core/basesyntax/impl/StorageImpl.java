@@ -4,21 +4,29 @@ import core.basesyntax.Storage;
 
 public class StorageImpl<K, V> implements Storage<K, V> {
     private static final int MAX_ITEMS_NUMBER = 10;
-    private final K[] keys;
-    private final V[] values;
+    private Entry<K, V>[] entries = new Entry[MAX_ITEMS_NUMBER];
+    private int size;
 
-    @SuppressWarnings("unchecked")
-    public StorageImpl() {
-        this.keys = (K[]) new Object[MAX_ITEMS_NUMBER];
-        this.values = (V[]) new Object[MAX_ITEMS_NUMBER];
+    private static class Entry<K, V> {
+        private K key;
+        private V value;
+
+        Entry(K key, V value) {
+            this.key = key;
+            this.value = value;
+        }
     }
 
     private int indexOfKey(K key) {
-        for (int i = 0; i < keys.length; i++) {
-            if (keys[i] != null && keys[i].equals(key)) {
-                return i;
-            } else if (keys[i] == null && key == null) {
-                return i;
+        for (int i = 0; i < size; i++) {
+            if (entries[i] != null) {
+                if (entries[i].key != null
+                        && entries[i].key.equals(key)) {
+                    return i;
+                } else if (entries[i].key == null
+                        && key == null) {
+                    return i;
+                }
             }
         }
         return -1;
@@ -27,14 +35,14 @@ public class StorageImpl<K, V> implements Storage<K, V> {
     @Override
     public void put(K key, V value) {
         if (indexOfKey(key) != -1) {
-            values[indexOfKey(key)] = value;
+            entries[indexOfKey(key)].value = value;
             return;
         }
-
-        for (int i = 0; i < keys.length; i++) {
-            if (keys[i] == null && values[i] == null) {
-                keys[i] = key;
-                values[i] = value;
+        
+        for (int i = 0; i < entries.length; i++) {
+            if (entries[i] == null) {
+                entries[i] = new Entry<>(key, value);
+                size++;
                 return;
             }
         }
@@ -43,19 +51,13 @@ public class StorageImpl<K, V> implements Storage<K, V> {
     @Override
     public V get(K key) {
         if (indexOfKey(key) != -1) {
-            return values[indexOfKey(key)];
+            return entries[indexOfKey(key)].value;
         }
         return null;
     }
 
     @Override
     public int size() {
-        int size = 0;
-        for (int i = 0; i < keys.length; i++) {
-            if ((keys[i] == null && values[i] != null) || (keys[i] != null && values[i] != null)) {
-                size++;
-            }
-        }
         return size;
     }
 }
